@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTGO LCQ Results — Vintage &amp; Legacy</title>
+  <meta name="description" content="Dashboard tracking Vintage and Legacy Last Chance Qualifier results on Magic: The Gathering Online.">
+  <link rel="stylesheet" href="style.css">
+  <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+  <header>
+    <div class="header-row">
+      <h1><a href="./">MTGO LCQ Results</a></h1>
+      <button id="theme-toggle" aria-label="Toggle theme">◐</button>
+    </div>
+    <nav>
+      <button class="tab active" data-format="all">All</button>
+      <button class="tab" data-format="vintage">Vintage</button>
+      <button class="tab" data-format="legacy">Legacy</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="stats" class="stats-row">
+      <div class="stat-card">
+        <span class="stat-value" id="stat-events">—</span>
+        <span class="stat-label">Events</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="stat-players">—</span>
+        <span class="stat-label">Unique Players</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="stat-latest">—</span>
+        <span class="stat-label">Latest Event</span>
+      </div>
+    </section>
+
+    <section id="events-section">
+      <h2>Events</h2>
+      <table id="events-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Format</th>
+            <th>Event</th>
+            <th>Players</th>
+            <th>Winner</th>
+            <th>Winning Deck</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="no-events" class="empty" hidden>No events found.</p>
+    </section>
+
+    <section id="top-decks-section">
+      <h2>Top Performing Decks</h2>
+      <div id="deck-bars"></div>
+    </section>
+
+    <section id="top-players-section">
+      <h2>Repeat Qualifiers</h2>
+      <table id="players-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Wins</th>
+            <th>Formats</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data sourced from MTGO LCQ event results. <a href="https://github.com">Source on GitHub</a></p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
