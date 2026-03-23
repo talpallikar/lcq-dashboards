@@ -189,6 +189,20 @@ def main():
         except URLError as e:
             print(f"    Error: {e}")
 
+    # Deduplicate events that share the same player list
+    # MTGGoldfish sometimes indexes the same event twice with different IDs
+    deduped = []
+    seen_fingerprints = set()
+    for ev in results:
+        players = tuple(d["player"] for d in ev["decklists"])
+        fingerprint = (ev["date"], ev["format"], players)
+        if fingerprint in seen_fingerprints:
+            print(f"  Skipping duplicate: {ev['event']}")
+            continue
+        seen_fingerprints.add(fingerprint)
+        deduped.append(ev)
+    results = deduped
+
     if dry_run:
         print("\n--- DRY RUN ---")
         print(json.dumps(results, indent=2))
