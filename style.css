@@ -16,6 +16,8 @@
   --row-hover: #f0ebe2;
   --vintage: #7c3aed;
   --legacy: #0369a1;
+  --modern: #b45309;
+  --standard: #059669;
   --bar-bg: #e8e3da;
 }
 
@@ -32,6 +34,8 @@
     --row-hover: #2e2c28;
     --vintage: #a78bfa;
     --legacy: #38bdf8;
+    --modern: #fbbf24;
+    --standard: #34d399;
     --bar-bg: #333330;
   }
 }
@@ -48,6 +52,8 @@
   --row-hover: #2e2c28;
   --vintage: #a78bfa;
   --legacy: #38bdf8;
+  --modern: #fbbf24;
+  --standard: #34d399;
   --bar-bg: #333330;
 }
 
@@ -62,6 +68,8 @@
   --row-hover: #f0ebe2;
   --vintage: #7c3aed;
   --legacy: #0369a1;
+  --modern: #b45309;
+  --standard: #059669;
   --bar-bg: #e8e3da;
 }
 
@@ -221,8 +229,10 @@ tbody tr:hover { background: var(--row-hover); }
   border-radius: 3px;
   color: #fff;
 }
-.format-badge.vintage { background: var(--vintage); }
-.format-badge.legacy  { background: var(--legacy); }
+.format-badge.vintage  { background: var(--vintage); }
+.format-badge.legacy   { background: var(--legacy); }
+.format-badge.modern   { background: var(--modern); }
+.format-badge.standard { background: var(--standard); }
 
 /* ---------- Deck Bars ---------- */
 #deck-bars {
