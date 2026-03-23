@@ -13,7 +13,7 @@ Usage:
 import json
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.request import urlopen, Request
 from urllib.error import URLError
 from urllib.parse import quote
@@ -21,8 +21,11 @@ from urllib.parse import quote
 GOLDFISH_BASE = "https://www.mtggoldfish.com"
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; MTGO-LCQ-Dashboard/1.0)"}
 
-LOOKBACK_DAYS = 180
 FORMATS = {"vintage", "legacy", "modern", "standard"}
+
+# Date range: March 2026
+DATE_START = "03/01/2026"
+DATE_END = "03/31/2026"
 
 
 def fetch(url: str, retries: int = 2) -> str:
@@ -39,19 +42,9 @@ def fetch(url: str, retries: int = 2) -> str:
             raise
 
 
-# ---------------------------------------------------------------------------
-# Search MTGGoldfish for Last Chance tournaments
-# ---------------------------------------------------------------------------
-
 def search_events() -> list[dict]:
-    """
-    Search MTGGoldfish tournament index for Last Chance events.
-    Returns list of {date, name, format, url, decklist_count, tournament_id}.
-    """
-    today = datetime.now()
-    start = (today - timedelta(days=LOOKBACK_DAYS)).strftime("%m/%d/%Y")
-    end = today.strftime("%m/%d/%Y")
-    date_range = quote(f"{start} - {end}")
+    """Search MTGGoldfish for Last Chance events in March 2026."""
+    date_range = quote(f"{DATE_START} - {DATE_END}")
 
     search_url = (
         f"{GOLDFISH_BASE}/tournament_searches/create?"
@@ -62,12 +55,10 @@ def search_events() -> list[dict]:
         f"&commit=Search"
     )
 
-    print(f"Searching MTGGoldfish for Last Chance events...")
+    print(f"Searching MTGGoldfish for Last Chance events (March 2026)...")
     html = fetch(search_url)
 
     events = []
-    # Parse the search results table
-    # Each row: <tr><td>date</td><td><a href="/tournament/ID">Name</a></td><td>Format</td><td>count</td></tr>
     row_pattern = re.compile(
         r"<tr>\s*"
         r"<td>(\d{4}-\d{2}-\d{2})</td>\s*"
@@ -101,38 +92,32 @@ def search_events() -> list[dict]:
     return events
 
 
-# ---------------------------------------------------------------------------
-# Parse individual tournament page
-# ---------------------------------------------------------------------------
-
 def parse_tournament(html: str, event: dict) -> dict:
     """
     Parse a MTGGoldfish tournament page.
-    Extracts all decklists with placement, archetype, and player name.
+    Extracts all decklists with placement, archetype, player name, and deck URL.
     """
     decklists = []
 
-    # Match rows like:
-    # <tr class='tournament-decklist-odd'>
-    #   <td class='text-right'>\n1st\n</td>
-    #   <td>\n<a href="/deck/ID">Archetype Name</a>...\n</td>
-    #   <td>\n<a href="/player/Name">Name</a>\n</td>
+    # Capture deck ID in the href so we can link directly to each decklist
     entry_pattern = re.compile(
         r"<tr\s+class='tournament-decklist-(?:odd|event)'>\s*"
         r"<td[^>]*>\s*(\d+)(?:st|nd|rd|th)\s*</td>\s*"
-        r"<td>\s*<a href=\"/deck/\d+\">([^<]+)</a>.*?</td>\s*"
+        r"<td>\s*<a href=\"/deck/(\d+)\">([^<]+)</a>.*?</td>\s*"
         r"<td>\s*<a href=\"/player/[^\"]+\">([^<]+)</a>\s*</td>",
         re.DOTALL,
     )
 
     for m in entry_pattern.finditer(html):
         place = int(m.group(1))
-        deck = m.group(2).strip()
-        player = m.group(3).strip()
+        deck_id = m.group(2)
+        deck = m.group(3).strip()
+        player = m.group(4).strip()
         decklists.append({
             "player": player,
             "deck": deck,
             "place": place,
+            "deck_url": f"{GOLDFISH_BASE}/deck/{deck_id}",
         })
 
     return {
@@ -145,12 +130,7 @@ def parse_tournament(html: str, event: dict) -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
-# Output
-# ---------------------------------------------------------------------------
-
 def write_data_js(events: list[dict], path: str = "data.js"):
-    """Write the data.js file that the dashboard consumes."""
     events.sort(key=lambda e: e.get("date", ""), reverse=True)
 
     lines = [
@@ -166,7 +146,6 @@ def write_data_js(events: list[dict], path: str = "data.js"):
 
 
 def load_existing(path: str = "data.js") -> list[dict]:
-    """Load existing data.js entries for merge."""
     try:
         with open(path) as f:
             text = f.read()

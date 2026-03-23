@@ -9,34 +9,32 @@ toggle.addEventListener('click', () => {
 });
 
 // ---------- State ----------
-let activeFormat = 'all';
+let activeView = 'overview'; // 'overview' or a format name
 
 // ---------- Tabs ----------
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelector('.tab.active').classList.remove('active');
     btn.classList.add('active');
-    activeFormat = btn.dataset.format;
+    activeView = btn.dataset.format;
     render();
   });
 });
 
 // ---------- Helpers ----------
-function filtered() {
-  if (activeFormat === 'all') return LCQ_DATA;
-  return LCQ_DATA.filter(e => e.format === activeFormat);
+function eventsForFormat(fmt) {
+  return LCQ_DATA.filter(e => e.format === fmt);
 }
 
 function formatDate(iso) {
   const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function pct(n, total) {
   return total ? Math.round((n / total) * 100) : 0;
 }
 
-// Gather all decklists from filtered events into archetype counts
 function metaCounts(events) {
   const counts = {};
   let total = 0;
@@ -49,10 +47,11 @@ function metaCounts(events) {
   return { counts, total };
 }
 
-function renderBars(containerEl, counts, total) {
+function renderBars(containerEl, counts, total, limit) {
   const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const max = sorted.length ? sorted[0][1] : 1;
-  containerEl.innerHTML = sorted.map(([deck, count]) => `
+  const show = limit ? sorted.slice(0, limit) : sorted;
+  const max = show.length ? show[0][1] : 1;
+  containerEl.innerHTML = show.map(([deck, count]) => `
     <div class="bar-row">
       <span class="bar-label" title="${deck}">${deck}</span>
       <div class="bar-track">
@@ -64,21 +63,54 @@ function renderBars(containerEl, counts, total) {
   `).join('');
 }
 
-// ---------- Render ----------
-function render() {
-  const data = filtered();
+// ---------- Overview ----------
+function renderOverview() {
+  document.getElementById('overview-section').hidden = false;
+  document.getElementById('format-section').hidden = true;
+
+  document.querySelectorAll('.overview-card').forEach(card => {
+    const fmt = card.dataset.fmt;
+    const events = eventsForFormat(fmt);
+    const { counts, total } = metaCounts(events);
+
+    const statsEl = card.querySelector('.overview-stats');
+    statsEl.innerHTML = `<span class="overview-stat">${events.length} events</span><span class="overview-stat">${total} decklists</span>`;
+
+    const barsEl = card.querySelector('.overview-bars');
+    renderBars(barsEl, counts, total, 8);
+  });
+
+  // Make overview cards clickable to jump to format
+  document.querySelectorAll('.overview-card').forEach(card => {
+    card.onclick = () => {
+      const fmt = card.dataset.fmt;
+      document.querySelector('.tab.active').classList.remove('active');
+      document.querySelector(`.tab[data-format="${fmt}"]`).classList.add('active');
+      activeView = fmt;
+      render();
+    };
+  });
+}
+
+// ---------- Format detail ----------
+function renderFormat(fmt) {
+  document.getElementById('overview-section').hidden = true;
+  document.getElementById('format-section').hidden = false;
+
+  const data = eventsForFormat(fmt);
+
+  // Meta heading
+  document.getElementById('meta-heading').textContent = fmt.charAt(0).toUpperCase() + fmt.slice(1) + ' Metagame';
 
   // Stats
   document.getElementById('stat-events').textContent = data.length;
   let totalDecklists = 0;
   for (const ev of data) totalDecklists += ev.decklists.length;
   document.getElementById('stat-decklists').textContent = totalDecklists;
-  const latest = data.length ? formatDate(data[0].date) : '—';
-  document.getElementById('stat-latest').textContent = latest;
 
-  // Overall metagame bars
-  const { counts: overallCounts, total: overallTotal } = metaCounts(data);
-  renderBars(document.getElementById('meta-bars'), overallCounts, overallTotal);
+  // Metagame bars
+  const { counts, total } = metaCounts(data);
+  renderBars(document.getElementById('meta-bars'), counts, total);
 
   // Events list
   const eventsEl = document.getElementById('events-list');
@@ -95,25 +127,22 @@ function render() {
   eventsEl.innerHTML = data.map((ev, idx) => {
     const { counts: evCounts, total: evTotal } = metaCounts([ev]);
     const winner = ev.decklists[0];
-
-    // Per-event meta breakdown as sorted array
     const metaSorted = Object.entries(evCounts).sort((a, b) => b[1] - a[1]);
 
     return `
       <div class="event-card">
-        <div class="event-header" data-idx="${idx}">
+        <div class="event-header" data-idx="${fmt}-${idx}">
           <div class="event-info">
-            <span class="format-badge ${ev.format}">${ev.format}</span>
             <strong>${ev.event}</strong>
             <span class="event-date">${formatDate(ev.date)}</span>
           </div>
           <div class="event-summary">
             <span class="event-players">${ev.players} players</span>
             <span class="event-winner">Winner: <strong>${winner.player}</strong> (${winner.deck})</span>
-            <span class="event-toggle">▸</span>
+            <span class="event-toggle">&#9656;</span>
           </div>
         </div>
-        <div class="event-detail" id="detail-${idx}" hidden>
+        <div class="event-detail" id="detail-${fmt}-${idx}" hidden>
           <div class="event-detail-grid">
             <div class="event-meta-col">
               <h3>Event Meta</h3>
@@ -138,14 +167,14 @@ function render() {
                     <tr>
                       <td>${dl.place}</td>
                       <td>${dl.player}</td>
-                      <td>${dl.deck}</td>
+                      <td>${dl.deck_url ? `<a href="${dl.deck_url}" target="_blank" rel="noopener">${dl.deck}</a>` : dl.deck}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
           </div>
-          ${ev.url ? `<a href="${ev.url}" class="event-link" target="_blank" rel="noopener">View on MTGO →</a>` : ''}
+          <a href="${ev.url}" class="event-link" target="_blank" rel="noopener">View on MTGGoldfish &#8594;</a>
         </div>
       </div>
     `;
@@ -154,18 +183,27 @@ function render() {
   // Attach toggle listeners
   eventsEl.querySelectorAll('.event-header').forEach(header => {
     header.addEventListener('click', () => {
-      const idx = header.dataset.idx;
-      const detail = document.getElementById('detail-' + idx);
+      const id = header.dataset.idx;
+      const detail = document.getElementById('detail-' + id);
       const arrow = header.querySelector('.event-toggle');
       if (detail.hidden) {
         detail.hidden = false;
-        arrow.textContent = '▾';
+        arrow.innerHTML = '&#9662;';
       } else {
         detail.hidden = true;
-        arrow.textContent = '▸';
+        arrow.innerHTML = '&#9656;';
       }
     });
   });
+}
+
+// ---------- Render ----------
+function render() {
+  if (activeView === 'overview') {
+    renderOverview();
+  } else {
+    renderFormat(activeView);
+  }
 }
 
 render();

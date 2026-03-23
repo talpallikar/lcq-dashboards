@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MTGO Last Chance Results</title>
+  <title>MTGO Last Chance Results — March 2026</title>
   <meta name="description" content="Dashboard tracking Vintage, Legacy, Modern, and Standard Last Chance event results on Magic: The Gathering Online.">
   <link rel="stylesheet" href="style.css">
   <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
@@ -15,7 +15,7 @@
       <button id="theme-toggle" aria-label="Toggle theme">◐</button>
     </div>
     <nav>
-      <button class="tab active" data-format="all">All</button>
+      <button class="tab active" data-format="overview">Overview</button>
       <button class="tab" data-format="vintage">Vintage</button>
       <button class="tab" data-format="legacy">Legacy</button>
       <button class="tab" data-format="modern">Modern</button>
@@ -24,35 +24,59 @@
   </header>
 
   <main>
-    <section id="stats" class="stats-row">
-      <div class="stat-card">
-        <span class="stat-value" id="stat-events">—</span>
-        <span class="stat-label">Events</span>
+    <!-- Overview: 4 mini metagame panels -->
+    <div id="overview-section">
+      <div class="overview-grid">
+        <div class="overview-card" data-fmt="vintage">
+          <h2><span class="format-badge vintage">Vintage</span> Metagame</h2>
+          <div class="overview-stats"></div>
+          <div class="overview-bars"></div>
+        </div>
+        <div class="overview-card" data-fmt="legacy">
+          <h2><span class="format-badge legacy">Legacy</span> Metagame</h2>
+          <div class="overview-stats"></div>
+          <div class="overview-bars"></div>
+        </div>
+        <div class="overview-card" data-fmt="modern">
+          <h2><span class="format-badge modern">Modern</span> Metagame</h2>
+          <div class="overview-stats"></div>
+          <div class="overview-bars"></div>
+        </div>
+        <div class="overview-card" data-fmt="standard">
+          <h2><span class="format-badge standard">Standard</span> Metagame</h2>
+          <div class="overview-stats"></div>
+          <div class="overview-bars"></div>
+        </div>
       </div>
-      <div class="stat-card">
-        <span class="stat-value" id="stat-decklists">—</span>
-        <span class="stat-label">Total Decklists</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-value" id="stat-latest">—</span>
-        <span class="stat-label">Latest Event</span>
-      </div>
-    </section>
+    </div>
 
-    <section id="meta-section">
-      <h2>Overall Metagame</h2>
-      <div id="meta-bars"></div>
-    </section>
+    <!-- Format detail view -->
+    <div id="format-section" hidden>
+      <section id="meta-section">
+        <h2 id="meta-heading">Metagame</h2>
+        <div class="meta-stats-row">
+          <div class="stat-card">
+            <span class="stat-value" id="stat-events">—</span>
+            <span class="stat-label">Events</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="stat-decklists">—</span>
+            <span class="stat-label">Decklists</span>
+          </div>
+        </div>
+        <div id="meta-bars"></div>
+      </section>
 
-    <section id="events-section">
-      <h2>Events</h2>
-      <div id="events-list"></div>
-      <p id="no-events" class="empty" hidden>No events found.</p>
-    </section>
+      <section id="events-section">
+        <h2>Events</h2>
+        <div id="events-list"></div>
+        <p id="no-events" class="empty" hidden>No events found.</p>
+      </section>
+    </div>
   </main>
 
   <footer>
-    <p>Data sourced from MTGO Last Chance event results. <a href="https://github.com/talpallikar/lcq-dashboards">Source on GitHub</a></p>
+    <p>Data sourced from <a href="https://www.mtggoldfish.com">MTGGoldfish</a>. <a href="https://github.com/talpallikar/lcq-dashboards">Source on GitHub</a></p>
   </footer>
 
   <script src="data.js"></script>
