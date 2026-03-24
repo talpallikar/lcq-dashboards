@@ -145,18 +145,6 @@ def write_data_js(events: list[dict], path: str = "data.js"):
     print(f"Wrote {len(events)} events to {path}")
 
 
-def load_existing(path: str = "data.js") -> list[dict]:
-    try:
-        with open(path) as f:
-            text = f.read()
-        match = re.search(r"const LCQ_DATA = (\[.*?\]);", text, re.DOTALL)
-        if match:
-            return json.loads(match.group(1))
-    except (FileNotFoundError, json.JSONDecodeError):
-        pass
-    return []
-
-
 def main():
     dry_run = "--dry-run" in sys.argv
 
@@ -207,13 +195,6 @@ def main():
         print("\n--- DRY RUN ---")
         print(json.dumps(results, indent=2))
         return
-
-    # Merge with existing data (dedup by URL which contains tournament ID)
-    existing = load_existing()
-    new_urls = {e.get("url", "") for e in results}
-    for old in existing:
-        if old.get("url", "") not in new_urls:
-            results.append(old)
 
     write_data_js(results)
 
